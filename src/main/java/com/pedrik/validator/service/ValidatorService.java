@@ -1,7 +1,8 @@
 package com.pedrik.validator.service;
 
-import com.pedrik.validator.exception.InvalidDocumentExeception;
 import org.springframework.stereotype.Service;
+
+import com.pedrik.validator.exception.InvalidDocumentExeception;
 
 @Service
 public class ValidatorService {
@@ -23,22 +24,22 @@ public class ValidatorService {
     private boolean isValidDocument(String document) throws Exception {
         String cleanDoc = document.replace(".", "").replace("-", "");
 
-        if(cleanDoc.length() == 9) {
+        if (cleanDoc.length() == 9) {
             return isValidRG(cleanDoc, 0);
         } else if (cleanDoc.length() == 11) {
-            return isValidCpf();
+            return isValidCpf(cleanDoc);
         } else {
             throw new InvalidDocumentExeception("Documento com muitos caracteres");
         }
     }
 
     public boolean isValidRG(String rg, int index) {
-        if (index == rg.length()-1) {
-            int dv = (sumRg %11 == 0) ? 0 : 11-(sumRg %11);
+        if (index == rg.length() - 1) {
+            int dv = (sumRg % 11 == 0) ? 0 : 11 - (sumRg % 11);
 
-            if(dv == 10 && String.valueOf(rg.charAt(8)).toLowerCase().equals("x")) {
+            if (dv == 10 && String.valueOf(rg.charAt(8)).toLowerCase().equals("x")) {
                 return true;
-            }else if (dv == Integer.parseInt(String.valueOf(rg.charAt(8)))) {
+            } else if (dv == Integer.parseInt(String.valueOf(rg.charAt(8)))) {
                 return true;
             }
 
@@ -48,9 +49,17 @@ public class ValidatorService {
         char currentChar = rg.charAt(index);
 
         switch (currentChar) {
-            case '0': case '1': case '2': case '3': case '4':
-            case '5': case '6': case '7': case '8': case '9':
-                if (index !=8) {
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+                if (index != 8) {
                     sumRg += Integer.parseInt(String.valueOf(currentChar)) * poundRg;
                     poundRg++;
                 }
@@ -61,7 +70,28 @@ public class ValidatorService {
         }
     }
 
-    private boolean isValidCpf() {
-        return false;
+    public boolean isValidCpf(String cpf) {
+        if (cpf.length() != 11 || cpf.matches("(\\d)\\1{10}")) {
+            return false;
+        }
+
+        int[] weights1 = {10, 9, 8, 7, 6, 5, 4, 3, 2};
+        int[] weights2 = {11, 10, 9, 8, 7, 6, 5, 4, 3, 2};
+
+        int sum1 = 0;
+        int sum2 = 0;
+
+        for (int i = 0; i < 9; i++) {
+            int digit = Character.getNumericValue(cpf.charAt(i));
+            sum1 += digit * weights1[i];
+            sum2 += digit * weights2[i];
+        }
+
+        int checkDigit1 = (sum1 % 11 < 2) ? 0 : 11 - (sum1 % 11);
+        sum2 += checkDigit1 * weights2[9];
+        int checkDigit2 = (sum2 % 11 < 2) ? 0 : 11 - (sum2 % 11);
+
+        return checkDigit1 == Character.getNumericValue(cpf.charAt(9))
+                && checkDigit2 == Character.getNumericValue(cpf.charAt(10));
     }
 }
