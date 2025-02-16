@@ -71,7 +71,7 @@ public class ValidatorService {
     }
 
     public boolean isValidCpf(String cpf) {
-        State state = State.START;
+        State state = State.REPEATED_DIGITS_CHECK;
         int sum1 = 0, sum2 = 0;
         int checkDigit1 = -1, checkDigit2 = -1;
         int[] weights1 = {10, 9, 8, 7, 6, 5, 4, 3, 2};
@@ -79,22 +79,6 @@ public class ValidatorService {
 
         while (true) {
             switch (state) {
-                case START:
-                    if (cpf.length() != 11) {
-                        state = State.INVALID;
-                    } else {
-                        state = State.LENGTH_CHECK;
-                    }
-                    break;
-
-                case LENGTH_CHECK:
-                    if (cpf.matches("(\\d)\\1{10}")) {
-                        state = State.INVALID;
-                    } else {
-                        state = State.REPEATED_DIGITS_CHECK;
-                    }
-                    break;
-
                 case REPEATED_DIGITS_CHECK:
                     for (int i = 0; i < 9; i++) {
                         int digit = Character.getNumericValue(cpf.charAt(i));
@@ -130,6 +114,6 @@ public class ValidatorService {
     }
 
     private enum State {
-        START, LENGTH_CHECK, REPEATED_DIGITS_CHECK, CALCULATE_SUM, CHECK_DIGITS, VALID, INVALID
+        REPEATED_DIGITS_CHECK, CALCULATE_SUM, CHECK_DIGITS, VALID, INVALID
     }
 }
