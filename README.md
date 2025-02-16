@@ -11,7 +11,7 @@ This project is a Java application developed as an activity for the Compilers co
 
 ## Technologies Used
 
-- **Java 11**: Main programming language.
+- **Java 21**: Main programming language.
 - **Spring Boot**: Framework for building the web application.
 - **Thymeleaf**: Template engine for rendering HTML pages.
 - **Maven**: Dependency management and build tool.
@@ -43,7 +43,7 @@ Este projeto é uma aplicação Java desenvolvida como atividade para a discipli
 
 ## Tecnologias Utilizadas
 
-- **Java 11**: Linguagem de programação principal.
+- **Java 21**: Linguagem de programação principal.
 - **Spring Boot**: Framework para criação da aplicação web.
 - **Thymeleaf**: Template engine para renderização das páginas HTML.
 - **Maven**: Gerenciador de dependências e build.
