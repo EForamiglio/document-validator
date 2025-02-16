@@ -88,14 +88,6 @@
     <div class="container">
         <h1>Validação de Documentos</h1>
         <form id="validacaoForm">
-            <div class="form-group">
-                <label for="tipoDocumento">Tipo de Documento:</label>
-                <select id="tipoDocumento" name="tipoDocumento" required>
-                    <option value="">Selecione o tipo de documento</option>
-                    <option value="cpf">CPF</option>
-                    <option value="rg">RG</option>
-                </select>
-            </div>
 
             <div class="form-group">
                 <label for="numeroDocumento">Número do Documento:</label>
@@ -110,7 +102,7 @@
     </div>
 
     <script>
-        document.getElementById("validacaoForm").addEventListener("submit", async function(event) {
+        document.getElementById("validacaoForm").addEventListener("submit", async function (event) {
             event.preventDefault(); // Impede o recarregamento da página
 
             const numeroDocumento = document.getElementById("numeroDocumento").value.trim();
