@@ -1,6 +1,6 @@
 # Document Validator
 
-##English
+## English
 
 This project is a Java application developed as an activity for the Compilers course. Its goal is to validate Brazilian documents, such as CPF and RG, providing a web interface for user interaction.
 
@@ -32,7 +32,7 @@ This project is a Java application developed as an activity for the Compilers co
 
 # Validador de Documentos Brasileiros
 
-##Português BR
+## Português BR
 
 Este projeto é uma aplicação Java desenvolvida como atividade para a disciplina de compiladores. O objetivo é validar documentos brasileiros, como CPF e RG, fornecendo uma interface web para interação.
 
