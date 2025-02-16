@@ -71,27 +71,65 @@ public class ValidatorService {
     }
 
     public boolean isValidCpf(String cpf) {
-        if (cpf.length() != 11 || cpf.matches("(\\d)\\1{10}")) {
-            return false;
-        }
-
+        State state = State.START;
+        int sum1 = 0, sum2 = 0;
+        int checkDigit1 = -1, checkDigit2 = -1;
         int[] weights1 = {10, 9, 8, 7, 6, 5, 4, 3, 2};
         int[] weights2 = {11, 10, 9, 8, 7, 6, 5, 4, 3, 2};
 
-        int sum1 = 0;
-        int sum2 = 0;
+        while (true) {
+            switch (state) {
+                case START:
+                    if (cpf.length() != 11) {
+                        state = State.INVALID;
+                    } else {
+                        state = State.LENGTH_CHECK;
+                    }
+                    break;
 
-        for (int i = 0; i < 9; i++) {
-            int digit = Character.getNumericValue(cpf.charAt(i));
-            sum1 += digit * weights1[i];
-            sum2 += digit * weights2[i];
+                case LENGTH_CHECK:
+                    if (cpf.matches("(\\d)\\1{10}")) {
+                        state = State.INVALID;
+                    } else {
+                        state = State.REPEATED_DIGITS_CHECK;
+                    }
+                    break;
+
+                case REPEATED_DIGITS_CHECK:
+                    for (int i = 0; i < 9; i++) {
+                        int digit = Character.getNumericValue(cpf.charAt(i));
+                        sum1 += digit * weights1[i];
+                        sum2 += digit * weights2[i];
+                    }
+                    state = State.CALCULATE_SUM;
+                    break;
+
+                case CALCULATE_SUM:
+                    checkDigit1 = (sum1 % 11 < 2) ? 0 : 11 - (sum1 % 11);
+                    sum2 += checkDigit1 * weights2[9];
+                    checkDigit2 = (sum2 % 11 < 2) ? 0 : 11 - (sum2 % 11);
+                    state = State.CHECK_DIGITS;
+                    break;
+
+                case CHECK_DIGITS:
+                    if (checkDigit1 == Character.getNumericValue(cpf.charAt(9))
+                            && checkDigit2 == Character.getNumericValue(cpf.charAt(10))) {
+                        state = State.VALID;
+                    } else {
+                        state = State.INVALID;
+                    }
+                    break;
+
+                case VALID:
+                    return true;
+
+                case INVALID:
+                    return false;
+            }
         }
+    }
 
-        int checkDigit1 = (sum1 % 11 < 2) ? 0 : 11 - (sum1 % 11);
-        sum2 += checkDigit1 * weights2[9];
-        int checkDigit2 = (sum2 % 11 < 2) ? 0 : 11 - (sum2 % 11);
-
-        return checkDigit1 == Character.getNumericValue(cpf.charAt(9))
-                && checkDigit2 == Character.getNumericValue(cpf.charAt(10));
+    private enum State {
+        START, LENGTH_CHECK, REPEATED_DIGITS_CHECK, CALCULATE_SUM, CHECK_DIGITS, VALID, INVALID
     }
 }
