@@ -106,9 +106,50 @@
         </form>
 
         <div id="resultado" class="resultado">
-            <!-- O resultado da validação será exibido aqui -->
         </div>
     </div>
+
+    <script>
+        document.getElementById("validacaoForm").addEventListener("submit", async function(event) {
+            event.preventDefault(); // Impede o recarregamento da página
+
+            const numeroDocumento = document.getElementById("numeroDocumento").value.trim();
+            const resultadoDiv = document.getElementById("resultado");
+
+            if (!numeroDocumento) {
+                alert("Por favor, insira um número de documento.");
+                return;
+            }
+
+            try {
+                console.log("Enviando requisição para validar:", numeroDocumento);
+
+                const response = await fetch(`/validate/${numeroDocumento}`, {
+                    method: "POST"
+                });
+
+                if (!response.ok) {
+                    throw new Error("Erro ao validar o documento.");
+                }
+
+                const isValid = await response.json();
+                console.log("Resposta do servidor:", isValid);
+
+                // Exibe o resultado e altera a cor do texto
+                resultadoDiv.innerHTML = isValid
+                    ? "<p class='valido'>Documento válido!</p>"
+                    : "<p class='invalido'>Documento inválido!</p>";
+
+                // Garante que a div esteja visível
+                resultadoDiv.style.display = "block";
+
+            } catch (error) {
+                console.error("Erro ao processar a requisição:", error);
+                alert("Ocorreu um erro ao validar o documento.");
+            }
+        });
+    </script>
+
 </body>
 
 </html>

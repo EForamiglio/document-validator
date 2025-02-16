@@ -14,29 +14,25 @@ public class ValidatorService {
             sumRg = 0;
             poundRg = 2;
 
-            isValidDocument(document);
-
-            return true;
+            return isValidDocument(document);
         } catch (Exception ex) {
             return false;
         }
     }
 
-    private void isValidDocument(String document) throws Exception {
+    private boolean isValidDocument(String document) throws Exception {
         String cleanDoc = document.replace(".", "").replace("-", "");
 
-        if(document.length() == 9) {
-            isValidRG(cleanDoc, 0);
-        } else if (document.length() == 11) {
-            isValidCpf();
+        if(cleanDoc.length() == 9) {
+            return isValidRG(cleanDoc, 0);
+        } else if (cleanDoc.length() == 11) {
+            return isValidCpf();
         } else {
             throw new InvalidDocumentExeception("Documento com muitos caracteres");
         }
     }
 
     public boolean isValidRG(String rg, int index) {
-
-
         if (index == rg.length()-1) {
             int dv = (sumRg %11 == 0) ? 0 : 11-(sumRg %11);
 
@@ -65,6 +61,7 @@ public class ValidatorService {
         }
     }
 
-    private void isValidCpf() {
+    private boolean isValidCpf() {
+        return false;
     }
 }
