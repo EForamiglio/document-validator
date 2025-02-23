@@ -2,72 +2,120 @@ package com.pedrik.validator.service;
 
 import org.springframework.stereotype.Service;
 
-import com.pedrik.validator.exception.InvalidDocumentExeception;
-
 @Service
 public class ValidatorService {
 
-    private int sumRg;
-    private int poundRg;
+    private int sumRg = 0;
+    private int poundRg = 2;
 
-    public boolean run(final String document) {
+    public boolean run(final String document, final String type) {
         try {
-            sumRg = 0;
-            poundRg = 2;
-
-            return isValidDocument(document);
+            return isValidDocument(document, type);
         } catch (Exception ex) {
             return false;
         }
     }
 
-    private boolean isValidDocument(String document) throws Exception {
-        String cleanDoc = document.replace(".", "").replace("-", "");
-
-        if (cleanDoc.length() == 9) {
-            return isValidRG(cleanDoc, 0);
-        } else if (cleanDoc.length() == 11) {
-            return isValidCpf(cleanDoc);
+    private boolean isValidDocument(String document, String type) {
+        if(type.equalsIgnoreCase("rg")) {
+            return isValidRG(document);
         } else {
-            throw new InvalidDocumentExeception("Documento com muitos caracteres");
+            return isValidCpf(document);
         }
     }
 
-    public boolean isValidRG(String rg, int index) {
-        if (index == rg.length() - 1) {
-            int dv = (sumRg % 11 == 0) ? 0 : 11 - (sumRg % 11);
+    public boolean isValidRG(String document) {
+        sumRg = 0;
+        poundRg = 2;
+        RgState currentState = RgState.Q0;
+        boolean hasFirstPoint = false;
+        boolean hasSecondPoint = false;
+        boolean hasFinalScore = false;
 
-            if (dv == 10 && String.valueOf(rg.charAt(8)).toLowerCase().equals("x")) {
-                return true;
-            } else if (dv == Integer.parseInt(String.valueOf(rg.charAt(8)))) {
-                return true;
+        for (char c : document.toCharArray()) {
+            switch (currentState) {
+                case Q0:
+                    currentState = (Character.isDigit(c)) ? RgState.Q1 : RgState.ERROR;
+                    incrementRgSum(c);
+                    break;
+                case Q1:
+                    currentState = (Character.isDigit(c)) ? RgState.Q2 : RgState.ERROR;
+                    incrementRgSum(c);
+                    break;
+                case Q2:
+                    if (Character.isDigit(c)) {
+                        currentState = RgState.Q3;
+                        incrementRgSum(c);
+                    } else if (c == '.' && !hasFirstPoint) {
+                        currentState = RgState.Q2;
+                        hasFirstPoint = true;
+                    } else {
+                        currentState = RgState.ERROR;
+                    }
+                    break;
+                case Q3:
+                    currentState = (Character.isDigit(c)) ? RgState.Q4 : RgState.ERROR;
+                    incrementRgSum(c);
+                    break;
+                case Q4:
+                    currentState = (Character.isDigit(c)) ? RgState.Q5 : RgState.ERROR;
+                    incrementRgSum(c);
+                    break;
+                case Q5:
+                    if (Character.isDigit(c)) {
+                        currentState = RgState.Q6;
+                        incrementRgSum(c);
+                    } else if (c == '.' && !hasSecondPoint && hasFirstPoint) {
+                        currentState = RgState.Q5;
+                        hasSecondPoint = true;
+                    } else {
+                        currentState = RgState.ERROR;
+                    }
+                    break;
+                case Q6:
+                    currentState = (Character.isDigit(c)) ? RgState.Q7 : RgState.ERROR;
+                    incrementRgSum(c);
+                    break;
+                case Q7:
+                    currentState = (Character.isDigit(c)) ? RgState.Q8 : RgState.ERROR;
+                    incrementRgSum(c);
+                    break;
+                case Q8:
+                    if (Character.isDigit(c)) {
+                        currentState = RgState.Q9;
+                    } else if (c == '-' && !hasFinalScore && hasSecondPoint) {
+                        currentState = RgState.Q8;
+                        hasFinalScore = true;
+                    } else {
+                        currentState = RgState.ERROR;
+                    }
+                    break;
+                default:
+                    currentState = RgState.ERROR;
             }
 
+            if (currentState == RgState.ERROR) break;
+        }
+
+        if(hasSecondPoint && !hasFinalScore) {
             return false;
         }
 
-        char currentChar = rg.charAt(index);
+        if (currentState == RgState.Q9) {
+            int dv = (sumRg % 11 == 0) ? 0 : 11 - (sumRg % 11);
 
-        switch (currentChar) {
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-                if (index != 8) {
-                    sumRg += Integer.parseInt(String.valueOf(currentChar)) * poundRg;
-                    poundRg++;
-                }
-                return isValidRG(rg, index + 1);
-
-            default:
-                return false;
+            if (dv == 10 && String.valueOf(document.charAt(8)).equalsIgnoreCase("x")) {
+                return true;
+            } else if (dv == Integer.parseInt(String.valueOf(document.charAt(document.length()-1)))) {
+                return true;
+            }
         }
+        return false;
+    }
+
+    public void incrementRgSum(char c) {
+        sumRg += Integer.parseInt(String.valueOf(c)) * poundRg;
+        poundRg++;
     }
 
     public boolean isValidCpf(String cpf) {
@@ -115,5 +163,9 @@ public class ValidatorService {
 
     private enum State {
         REPEATED_DIGITS_CHECK, CALCULATE_SUM, CHECK_DIGITS, VALID, INVALID
+    }
+
+    private enum RgState {
+        Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, ERROR
     }
 }
