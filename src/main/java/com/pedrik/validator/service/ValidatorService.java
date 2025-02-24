@@ -124,70 +124,69 @@ public class ValidatorService {
         boolean hasSignals = false;
         int currentState = State.Q0.ordinal();
         int index = 10;
-        int firstDigit = 0;
-        int secondDigit = 0;
+        int firstDigitSum = 0;
+        int secondDigitSum = 0;
+        int firstCheck = -1, secondCheck = -1;
 
         for (char c : cpf.toCharArray()) {
             switch (currentState) {
-                case 0:
-                case 1:
-                case 2:
-                case 4:
-                case 5:
-                case 6:
-                case 8:
-                case 9:
-                case 10:
-                case 12:
-                case 13:
+                case 0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13 -> {
                     if (!Character.isDigit(c)) {
                         return false;
                     }
-                    break;
-                case 3:
+                }
+                case 3 -> {
                     if (c == '.') {
                         hasSignals = true;
                     } else if (!Character.isDigit(c) && c != '.') {
                         return false;
                     }
-                    break;
-
-                case 7:
+                }
+                case 7 -> {
                     if (!(Character.isDigit(c) && !hasSignals) && !(c == '.' && hasSignals)) {
                         return false;
                     }
-                    break;
-                case 11:
+                }
+                case 11 -> {
                     if (c != '-') {
                         return false;
                     }
-                    break;
-                default:
+                }
+                default -> {
                     return false;
+                }
             }
 
             if (Character.isDigit(c)) {
-                firstDigit += (Integer.parseInt(String.valueOf(c)) * (index));
-                if ((currentState == 9 && !hasSignals) || (currentState == 12 && hasSignals)) {
-                    var result = firstDigit % 11;
-                    if (!(result < 2 && Integer.parseInt(String.valueOf(c)) == 0) && !(result >= 2 && Integer.parseInt(String.valueOf(c)) == (11 - result))) {
+                int num = Character.getNumericValue(c);
+
+                // Acumula valores para os cálculos dos dígitos verificadores
+                if ((!hasSignals && currentState < 9) || (hasSignals && currentState < 10)) {
+                    firstDigitSum += num * index;
+                    secondDigitSum += num * (index + 1);
+                    index--;
+                }
+
+                if ((!hasSignals && currentState == 9) || (hasSignals && currentState == 12)) {
+                    firstCheck = (firstDigitSum % 11) < 2 ? 0 : 11 - (firstDigitSum % 11);
+                    if (num != firstCheck) {
                         return false;
                     }
                 }
-                secondDigit += (Integer.parseInt(String.valueOf(c)) * (index + 1));
-                if ((currentState == 10 && !hasSignals) || (currentState == 13 && hasSignals)) {
-                    var result = secondDigit % 11;
-                    if (!(result < 2 && Integer.parseInt(String.valueOf(c)) != 0) && !(result >= 2 && Integer.parseInt(String.valueOf(c)) == (11 - result))) {
+
+                if ((!hasSignals && currentState == 10) || (hasSignals && currentState == 13)) {
+                    secondDigitSum += firstCheck * 2; // Adiciona o primeiro dígito verificador ao cálculo
+                    secondCheck = (secondDigitSum % 11) < 2 ? 0 : 11 - (secondDigitSum % 11);
+                    if (num != secondCheck) {
                         return false;
                     }
                 }
-                index--;
             }
 
             currentState++;
         }
 
-        return true;
+        return currentState == (hasSignals ? 14 : 11);
     }
 
     private enum State {
