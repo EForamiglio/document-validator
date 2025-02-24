@@ -17,7 +17,7 @@ public class ValidatorService {
     }
 
     private boolean isValidDocument(String document, String type) {
-        if(type.equalsIgnoreCase("rg")) {
+        if (type.equalsIgnoreCase("rg")) {
             return isValidRG(document);
         } else {
             return isValidCpf(document);
@@ -27,7 +27,7 @@ public class ValidatorService {
     public boolean isValidRG(String document) {
         sumRg = 0;
         poundRg = 2;
-        RgState currentState = RgState.Q0;
+        State currentState = State.Q0;
         boolean hasFirstPoint = false;
         boolean hasSecondPoint = false;
         boolean hasFinalScore = false;
@@ -35,78 +35,80 @@ public class ValidatorService {
         for (char c : document.toCharArray()) {
             switch (currentState) {
                 case Q0:
-                    currentState = (Character.isDigit(c)) ? RgState.Q1 : RgState.ERROR;
+                    currentState = (Character.isDigit(c)) ? State.Q1 : State.ERROR;
                     incrementRgSum(c);
                     break;
                 case Q1:
-                    currentState = (Character.isDigit(c)) ? RgState.Q2 : RgState.ERROR;
+                    currentState = (Character.isDigit(c)) ? State.Q2 : State.ERROR;
                     incrementRgSum(c);
                     break;
                 case Q2:
                     if (Character.isDigit(c)) {
-                        currentState = RgState.Q3;
+                        currentState = State.Q3;
                         incrementRgSum(c);
                     } else if (c == '.' && !hasFirstPoint) {
-                        currentState = RgState.Q2;
+                        currentState = State.Q2;
                         hasFirstPoint = true;
                     } else {
-                        currentState = RgState.ERROR;
+                        currentState = State.ERROR;
                     }
                     break;
                 case Q3:
-                    currentState = (Character.isDigit(c)) ? RgState.Q4 : RgState.ERROR;
+                    currentState = (Character.isDigit(c)) ? State.Q4 : State.ERROR;
                     incrementRgSum(c);
                     break;
                 case Q4:
-                    currentState = (Character.isDigit(c)) ? RgState.Q5 : RgState.ERROR;
+                    currentState = (Character.isDigit(c)) ? State.Q5 : State.ERROR;
                     incrementRgSum(c);
                     break;
                 case Q5:
                     if (Character.isDigit(c)) {
-                        currentState = RgState.Q6;
+                        currentState = State.Q6;
                         incrementRgSum(c);
                     } else if (c == '.' && !hasSecondPoint && hasFirstPoint) {
-                        currentState = RgState.Q5;
+                        currentState = State.Q5;
                         hasSecondPoint = true;
                     } else {
-                        currentState = RgState.ERROR;
+                        currentState = State.ERROR;
                     }
                     break;
                 case Q6:
-                    currentState = (Character.isDigit(c)) ? RgState.Q7 : RgState.ERROR;
+                    currentState = (Character.isDigit(c)) ? State.Q7 : State.ERROR;
                     incrementRgSum(c);
                     break;
                 case Q7:
-                    currentState = (Character.isDigit(c)) ? RgState.Q8 : RgState.ERROR;
+                    currentState = (Character.isDigit(c)) ? State.Q8 : State.ERROR;
                     incrementRgSum(c);
                     break;
                 case Q8:
                     if (Character.isDigit(c)) {
-                        currentState = RgState.Q9;
+                        currentState = State.Q9;
                     } else if (c == '-' && !hasFinalScore && hasSecondPoint) {
-                        currentState = RgState.Q8;
+                        currentState = State.Q8;
                         hasFinalScore = true;
                     } else {
-                        currentState = RgState.ERROR;
+                        currentState = State.ERROR;
                     }
                     break;
                 default:
-                    currentState = RgState.ERROR;
+                    currentState = State.ERROR;
             }
 
-            if (currentState == RgState.ERROR) break;
+            if (currentState == State.ERROR) {
+                break;
+            }
         }
 
-        if(hasSecondPoint && !hasFinalScore) {
+        if (hasSecondPoint && !hasFinalScore) {
             return false;
         }
 
-        if (currentState == RgState.Q9) {
+        if (currentState == State.Q9) {
             int dv = (sumRg % 11 == 0) ? 0 : 11 - (sumRg % 11);
 
             if (dv == 10 && String.valueOf(document.charAt(8)).equalsIgnoreCase("x")) {
                 return true;
-            } else if (dv == Integer.parseInt(String.valueOf(document.charAt(document.length()-1)))) {
+            } else if (dv == Integer.parseInt(String.valueOf(document.charAt(document.length() - 1)))) {
                 return true;
             }
         }
@@ -119,53 +121,76 @@ public class ValidatorService {
     }
 
     public boolean isValidCpf(String cpf) {
-        State state = State.REPEATED_DIGITS_CHECK;
-        int sum1 = 0, sum2 = 0;
-        int checkDigit1 = -1, checkDigit2 = -1;
-        int[] weights1 = {10, 9, 8, 7, 6, 5, 4, 3, 2};
-        int[] weights2 = {11, 10, 9, 8, 7, 6, 5, 4, 3, 2};
+        boolean hasSignals = false;
+        int currentState = State.Q0.ordinal();
+        int index = 10;
+        int firstDigit = 0;
+        int secondDigit = 0;
 
-        while (true) {
-            switch (state) {
-                case REPEATED_DIGITS_CHECK:
-                    for (int i = 0; i < 9; i++) {
-                        int digit = Character.getNumericValue(cpf.charAt(i));
-                        sum1 += digit * weights1[i];
-                        sum2 += digit * weights2[i];
+        for (char c : cpf.toCharArray()) {
+            switch (currentState) {
+                case 0:
+                case 1:
+                case 2:
+                case 4:
+                case 5:
+                case 6:
+                case 8:
+                case 9:
+                case 10:
+                case 12:
+                case 13:
+                    if (!Character.isDigit(c)) {
+                        return false;
                     }
-                    state = State.CALCULATE_SUM;
                     break;
-
-                case CALCULATE_SUM:
-                    checkDigit1 = (sum1 % 11 < 2) ? 0 : 11 - (sum1 % 11);
-                    sum2 += checkDigit1 * weights2[9];
-                    checkDigit2 = (sum2 % 11 < 2) ? 0 : 11 - (sum2 % 11);
-                    state = State.CHECK_DIGITS;
-                    break;
-
-                case CHECK_DIGITS:
-                    if (checkDigit1 == Character.getNumericValue(cpf.charAt(9))
-                            && checkDigit2 == Character.getNumericValue(cpf.charAt(10))) {
-                        state = State.VALID;
-                    } else {
-                        state = State.INVALID;
+                case 3:
+                    if (c == '.') {
+                        hasSignals = true;
+                    } else if (!Character.isDigit(c) && c != '.') {
+                        return false;
                     }
                     break;
 
-                case VALID:
-                    return true;
-
-                case INVALID:
+                case 7:
+                    if (!(Character.isDigit(c) && !hasSignals) && !(c == '.' && hasSignals)) {
+                        return false;
+                    }
+                    break;
+                case 11:
+                    if (c != '-') {
+                        return false;
+                    }
+                    break;
+                default:
                     return false;
             }
+
+            if (Character.isDigit(c)) {
+                firstDigit += (Integer.parseInt(String.valueOf(c)) * (index));
+                if ((currentState == 9 && !hasSignals) || (currentState == 12 && hasSignals)) {
+                    var result = firstDigit % 11;
+                    if (!(result < 2 && Integer.parseInt(String.valueOf(c)) == 0) && !(result >= 2 && Integer.parseInt(String.valueOf(c)) == (11 - result))) {
+                        return false;
+                    }
+                }
+                secondDigit += (Integer.parseInt(String.valueOf(c)) * (index + 1));
+                if ((currentState == 10 && !hasSignals) || (currentState == 13 && hasSignals)) {
+                    var result = secondDigit % 11;
+                    if (!(result < 2 && Integer.parseInt(String.valueOf(c)) != 0) && !(result >= 2 && Integer.parseInt(String.valueOf(c)) == (11 - result))) {
+                        return false;
+                    }
+                }
+                index--;
+            }
+
+            currentState++;
         }
+
+        return true;
     }
 
     private enum State {
-        REPEATED_DIGITS_CHECK, CALCULATE_SUM, CHECK_DIGITS, VALID, INVALID
-    }
-
-    private enum RgState {
-        Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, ERROR
+        Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, ERROR
     }
 }
