@@ -160,8 +160,7 @@ public class ValidatorService {
             if (Character.isDigit(c)) {
                 int num = Character.getNumericValue(c);
 
-                // Acumula valores para os cálculos dos dígitos verificadores
-                if ((!hasSignals && currentState < 9) || (hasSignals && currentState < 10)) {
+                if ((!hasSignals && currentState < 9) || (hasSignals && currentState < 12)) {
                     firstDigitSum += num * index;
                     secondDigitSum += num * (index + 1);
                     index--;
@@ -175,7 +174,7 @@ public class ValidatorService {
                 }
 
                 if ((!hasSignals && currentState == 10) || (hasSignals && currentState == 13)) {
-                    secondDigitSum += firstCheck * 2; // Adiciona o primeiro dígito verificador ao cálculo
+                    secondDigitSum += firstCheck * 2;
                     secondCheck = (secondDigitSum % 11) < 2 ? 0 : 11 - (secondDigitSum % 11);
                     if (num != secondCheck) {
                         return false;

@@ -1,6 +1,5 @@
 package com.pedrik.validator.service;
 
-import java.util.Random;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -28,14 +27,14 @@ class ValidatorServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("generateCpf")
+    @MethodSource("validCpfs")
     @DisplayName("Deve retornar true para CPF válidos")
     void shouldReturnTrueForValidCpf(String document) {
         assertTrue(validatorService.run(document, "CPF"));
     }
 
     @ParameterizedTest
-    @MethodSource("generateCpf")
+    @MethodSource("invalidCpfs")
     @DisplayName("Deve retornar false para CPF inválidos")
     void shouldReturnFalseForInvalidCpf(String document) {
         assertFalse(validatorService.run(document, "CPF"));
@@ -55,45 +54,54 @@ class ValidatorServiceTest {
                 "12.345.678-90", "12.345.67-89", "12.345.678-XX", "12.345.678-0A", "12.345.678-0", "12.345.678-000");
     }
 
-    static Stream<String> generateCpf() {
-        return Stream.generate(() -> {
-            Random rand = new Random();
-            boolean formatado = rand.nextBoolean();
-
-            int num1 = rand.nextInt(1000);
-            int num2 = rand.nextInt(1000);
-            int num3 = rand.nextInt(1000);
-
-            String n1 = String.format("%03d", num1);
-            String n2 = String.format("%03d", num2);
-            String n3 = String.format("%03d", num3);
-
-            String nums = n1 + n2 + n3;
-            int dig1 = cpfDigit(nums, -1);
-            int dig2 = cpfDigit(nums, dig1);
-
-            if (formatado) {
-                return String.format("%s.%s.%s-%d%d", n1, n2, n3, dig1, dig2);
-            } else {
-                return n1 + n2 + n3 + dig1 + dig2;
-            }
-        }).limit(120);
+    static Stream<String> validCpfs() {
+        return Stream.of(
+            "812.337.770-33",
+            "322.569.870-94",
+            "452.465.880-76",
+            "182.072.660-66",
+            "687.844.490-04",
+            "876.013.630-82",
+            "961.901.790-02",
+            "325.291.520-04",
+            "432.393.050-03",
+            "71197227008",
+            "39565039022",
+            "26289206036",
+            "71821901096",
+            "72646061048",
+            "61668231000",
+            "60551095067",
+            "95555362013",
+            "81396410066",
+            "01602323097",
+            "31917787057"
+        );
     }
-
-    private static int cpfDigit(String nums, int n4) {
-        StringBuilder numList = new StringBuilder(nums);
-        if (n4 != -1) {
-            numList.append(n4);
-        }
-
-        int x = 0;
-        int j = 0;
-        for (int i = (n4 != -1 ? 11 : 10); i >= 2; i--, j++) {
-            x += Character.getNumericValue(numList.charAt(j)) * i;
-        }
-
-        int y = x % 11;
-        return (y < 2) ? 0 : 11 - y;
+    
+    static Stream<String> invalidCpfs() {
+        return Stream.of(
+                "812.37.770-33",
+            "322.569.870-95",
+            "452.465.880-AA",
+            "182.072.660.66",
+            "687.84.490-04",
+            "876.013.63-82",
+            "961.901.790-s2",
+            "325.21.520-01",
+            "432.393.050-3",
+            "7119722700ZZ8",
+            "395650390A2",
+            "26289206035",
+            "71821901016",
+            "72646061028",
+            "616682310V0",
+            "60551095017",
+            "95555362043",
+            "81396410Q60",
+            "01602323091",
+            "3191778AA58"
+        );
     }
 
 }
